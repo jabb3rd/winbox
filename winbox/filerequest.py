@@ -60,7 +60,7 @@ class mtFileRequest(object):
 			msg.set_reply_expected(True)
 			msg.set_request_id(self.request_id)
 			msg.set_session_id(self.session_id)
-			msg.add_int(2, self.part_size)
+			msg.add_u32(2, self.part_size)
 			msg.set_command(4)
 			msg.set_from(0, 8)
 			msg.set_to(2, 2)

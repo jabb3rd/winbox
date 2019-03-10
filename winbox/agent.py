@@ -45,8 +45,8 @@ class mtAgent(object):
 		msg.set_command(1)
 		msg.set_request_id(self.request_id)
 		msg.set_reply_expected(True)
-		msg.add_int(3, ip2dword(host))
-		msg.add_int(4, port)
+		msg.add_u32(3, ip2dword(host))
+		msg.add_u32(4, port)
 		if send != b'':
 			msg.add_string(7, send)
 		if receive != b'':
@@ -60,8 +60,8 @@ class mtAgent(object):
 		msg.set_command(2)
 		msg.set_request_id(self.request_id)
 		msg.set_reply_expected(True)
-		msg.add_int(3, ip2dword(host))
-		msg.add_int(4, port)
+		msg.add_u32(3, ip2dword(host))
+		msg.add_u32(4, port)
 		if send != b'':
 			msg.add_string(7, send)
 		if receive != b'':
@@ -75,5 +75,5 @@ class mtAgent(object):
 		msg.set_command(3)
 		msg.set_request_id(self.request_id)
 		msg.set_reply_expected(True)
-		msg.add_int(3, ip2dword(host))
+		msg.add_u32(3, ip2dword(host))
 		return self.do_probe(msg)

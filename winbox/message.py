@@ -27,11 +27,11 @@ class mtMessage(object):
 		self.add(id, BOOL, value)
 
 	# Add an integer (u32)
-	def add_int(self, id, value):
+	def add_u32(self, id, value):
 		self.add(id, U32, value)
 
 	# Add a long integer (u64)
-	def add_long(self, id, value):
+	def add_u64(self, id, value):
 		self.add(id, U64, value)
 
 	# Add a string (a sequence of bytes, not a native python string)
@@ -62,18 +62,18 @@ class mtMessage(object):
 
 	# Set a command to execute
 	def set_command(self, command):
-		self.add_int(SYS_CMD, command)
+		self.add_u32(SYS_CMD, command)
 
 	# Set a request ID
 	def set_request_id(self, id):
-		self.add_int(SYS_REQID, id)
+		self.add_u32(SYS_REQID, id)
 
 	# Set True to expect a reply after a request
 	def set_reply_expected(self, value):
 		self.add_bool(SYS_REPLYEXP, value)
 
 	def set_session_id(self, id):
-		self.add_int(STD_ID, id)
+		self.add_u32(STD_ID, id)
 
 	# Get a value of a given id/type
 	def get_value(self, get_id, get_type):
