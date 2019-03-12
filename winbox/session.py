@@ -9,8 +9,8 @@ from winbox.tcpsession import *
 
 # Winbox session with given data: host, port, user, password
 class mtWinboxSession(object):
-	def __init__(self, host, port):
-		self.session = mtTCPSession(host, port)
+	def __init__(self, host, port, timeout):
+		self.session = mtTCPSession(host, port, timeout = timeout)
 		self.session.connect()
 		self.session_id = None
 		self.request_id = 0

@@ -6,11 +6,11 @@ from winbox.common import *
 
 # mtMessage represents a Message protocol sequence
 class mtMessage(object):
-	def __init__(self, raw = None):
+	def __init__(self, raw = None, parsed = False):
 		self.contents = []
 		self.raw = raw
 		self.ready = False
-		self.parsed = False
+		self.parsed = parsed
 
 	# Clean up a bit, so the object can be reused again
 	def clear(self):
@@ -110,7 +110,6 @@ class mtMessage(object):
 						value_bytes += struct.pack('<I', element)
 					elif elements_type == U64:
 						value_bytes += struct.pack('<Q', element)
-
 			if type == BOOL:
 				size_bytes = b''
 				value_bytes = b''
@@ -179,13 +178,17 @@ class mtMessage(object):
 						pointer += TYPE_SIZE[U32]
 					# Treat M2 array as a raw data
 					elif elements_type == MESSAGE:
-						if short:
-							raise Exception('M2 short: not implemented yet!')
-						else:
-							element_length, = struct.unpack('<H', self.raw[pointer:pointer+2])
-							element_value = self.raw[pointer:pointer+element_length+2]
-							pointer += (element_length + 2)
-							array_contents.append(element_value)
+						element_length, = struct.unpack('<H', self.raw[pointer:pointer+2])
+						pointer += 2
+						subheader = self.raw[pointer:pointer+2]
+						if subheader != M2_HEADER:
+							raise Exception('Not an M2 header in the array element')
+						pointer += 2
+						element_raw_value = self.raw[pointer:pointer+element_length-2]
+						submessage = mtMessage(element_raw_value)
+						submessage.parse()
+						pointer += (element_length - 2)
+						array_contents.append(submessage.contents)
 					i += 1
 				self.add(id, type, array_contents)
 			else:
@@ -224,6 +227,17 @@ class mtMessage(object):
 					value = self.raw[pointer:pointer+raw_length]
 					pointer += raw_length
 					self.add(id, type, value)
+				elif type == MESSAGE:
+					message_length, = struct.unpack('<H', self.raw[pointer:pointer+2])
+					pointer += 2
+					subheader = self.raw[pointer:pointer+2]
+					if subheader != M2_HEADER:
+						raise Exception('Not an M2 header!')
+					pointer += 2
+					submessage = mtMessage(self.raw[pointer:pointer+message_length])
+					pointer += message_length
+					submessage.parse()
+					self.add(it, type, submessage.contents)
 				else:
 					raise Exception('Typeid %s not implemented yet!' % hex(typeid))
 		self.parsed = True
