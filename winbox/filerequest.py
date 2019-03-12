@@ -47,6 +47,34 @@ class mtFileRequest(object):
 		self.file_size = result.get_value(2, U32)
 		return True
 
+	# Request a file download as like 'list' is requested
+	def request_download_list(self):
+		self.request_id += 1
+		msg = mtMessage()
+		msg.set_reply_expected(True)
+		msg.set_request_id(self.request_id)
+		msg.set_command(7)
+		msg.add_string(1, self.filename)
+		msg.set_from(0, 8)
+		msg.set_to(2, 2)
+		pkt = mtPacket(msg.build())
+		self.session.send(pkt)
+		reply = self.session.recv(self.fragment_size)
+		result = mtMessage(reply.raw)
+		result.parse()
+
+		self.error = result.get_value(SYS_ERRNO, U32)
+		if self.error == ERROR_FAILED:
+			self.error_description = result.get_value(SYS_ERRSTR, STRING)
+			return False
+		elif self.error is not None:
+			return False
+		self.session_id = result.get_value(STD_ID, U32)
+		if self.session_id is None:
+			raise Exception('Error getting download session id')
+		self.file_size = result.get_value(2, U32)
+		return True
+
 	# Proceed with download, requesting a file chunk by chunk
 	def download(self):
 		if self.session_id is None:
