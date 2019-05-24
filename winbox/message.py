@@ -30,6 +30,10 @@ class mtMessage(object):
 	def add_u32(self, id, value):
 		self.add(id, U32, value)
 
+	# Add an array of u32 integers
+	def add_u32_array(self, id, value):
+		self.add(id, U32_ARRAY, value)
+
 	# Add a long integer (u64)
 	def add_u64(self, id, value):
 		self.add(id, U64, value)
@@ -45,6 +49,14 @@ class mtMessage(object):
 	# Set a raw binary contents
 	def set_raw(self, raw):
 		self.raw = raw
+
+	# Add a single M2 message
+	def add_message(self, id, value):
+		self.add(id, MESSAGE, value)
+
+	# Add an array of M2 messages
+	def add_message_array(self, id, value):
+		self.add(id, MESSAGE_ARRAY, value)
 
 	# Set a receiver, which will handle a request
 	def set_to(self, handler, subhandler = None):
@@ -103,13 +115,21 @@ class mtMessage(object):
 				size_bytes = struct.pack('<H', size)
 				elements_type = type & ARRAY_FILTER
 				value_bytes = b''
-				for element in value:
-					if elements_type == BOOL:
+				if elements_type == BOOL:
+					for element in value:
 						value_bytes += struct.pack('<B', element)
-					elif elements_type == U32:
+				elif elements_type == U32:
+					for element in value:
 						value_bytes += struct.pack('<I', element)
-					elif elements_type == U64:
+				elif elements_type == U64:
+					for element in value:
 						value_bytes += struct.pack('<Q', element)
+				elif elements_type == MESSAGE:
+					header_bytes = b''
+					for element in value:
+						element_bytes = element.build()
+						element_size_bytes = struct.pack('<H', len(element_bytes) + 2)
+						value_bytes += element_size_bytes + M2_HEADER + element_bytes
 			if type == BOOL:
 				size_bytes = b''
 				value_bytes = b''
@@ -132,6 +152,11 @@ class mtMessage(object):
 				else:
 					size_bytes = struct.pack('<H', size)
 				value_bytes = value
+			# Needs to be checked
+			elif type == MESSAGE:
+				msg_bytes = value.build()
+				size_bytes = struct.pack('<H', len(msg_bytes) + 2)
+				value_bytes = M2_HEADER + msg_bytes
 			typeid_bytes = struct.pack('<I', typeid)
 			buffer.write(typeid_bytes + size_bytes + value_bytes)
 		self.raw = buffer.getvalue()
@@ -142,7 +167,15 @@ class mtMessage(object):
 	def dump(self):
 		for i in self.contents:
 			id, type, value = i
-			print('%s%s:%s' % (TYPE_REDUCTION[type], hex(id)[2:], value))
+			if type == MESSAGE_ARRAY:
+				print('%s%s:%s' % (TYPE_REDUCTION[type], hex(id)[2:], value))
+				for m in value:
+					for n in m:
+						sub_id, sub_type, sub_value = n
+						print('%s%s:%s' % (TYPE_REDUCTION[sub_type], hex(sub_id)[2:], sub_value))
+					print()
+			else:
+				print('%s%s:%s' % (TYPE_REDUCTION[type], hex(id)[2:], value))
 
 	# Make a Message sequence from a raw binary data
 	def parse(self):
