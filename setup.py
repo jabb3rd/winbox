@@ -6,7 +6,7 @@ setup (
 	description='Winbox protocol experimental implementation',
 	license='MIT',
 	packages=find_packages(),
-	author='@jabberd',
+	author='@jabb3rd',
 	keywords=['winbox'],
-	url='https://github.com/jabberd/winbox'
+	url='https://github.com/jabb3rd/winbox'
 )
